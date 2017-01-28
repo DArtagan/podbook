@@ -1,0 +1,18 @@
+server:
+    build: server
+    env_file:
+        - ./podbook.env
+    ports:
+        - 5000
+    volumes:
+        - ./books:/app/books
+
+nginx:
+    image: nginx
+    links:
+        - server
+    ports:
+        - 80:80
+    volumes:
+        - ./books:/var/www/media/
+        - ./nginx:/etc/nginx/conf.d/

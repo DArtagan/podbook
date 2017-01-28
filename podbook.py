@@ -16,10 +16,13 @@ AUTH_USERNAME = os.environ.get('AUTH_USERNAME', False)
 AUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', False)
 REQUIRE_AUTH = AUTH_USERNAME and AUTH_PASSWORD
 
+FORMATS = ['mp3', 'm4b']
+
 if DEBUG_MODE: print('*** RUNNING IN DEBUG MODE ***')
 if not REQUIRE_AUTH: print('*** RUNNING WITHOUT AUTHENTICATION ***')
 
 app = flask.Flask(__name__)
+
 
 def requires_auth(f):
     '''If we set a username and password, require it for this request.'''
@@ -47,7 +50,7 @@ def list_books():
             if not os.path.isdir(book_path):
                 continue
 
-            if not any(file.endswith('.mp3') for file in os.listdir(book_path)):
+            if not any(file.endswith(tuple(FORMATS)) for file in os.listdir(book_path)):
                 continue
 
             yield(author, title)
@@ -115,7 +118,7 @@ def get_feed(uuid):
     fg.podcast.itunes_category('Arts')
 
     for file in sorted(os.listdir(os.path.join('books', author, title))):
-        if not file.endswith('.mp3'):
+        if not file.endswith(tuple(FORMATS)):
             continue
 
         name = file.rsplit('.', 1)[0]
