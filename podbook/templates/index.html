@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+  </head>
+  <body>
+    <div class="container mt-3 mb-4">
+      <h1 class="display-4">Podbook</h1>
+    </div>
+    <div class="container">
+      <div class="card-columns">
+        {% for author, bibliography in library.items() %}
+          <div class="card">
+            <p class="card-header">{{ author }}</p>
+            <ul class="list-group">
+              {% for book in bibliography %}
+                <li class="list-group-item"><a href="feed/{{ book[1] }}.xml">{{ book[0] }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>

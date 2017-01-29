@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-import feedgen.feed
-import flask
+import collections
 import functools
 import os
-import sys
 import uuid
+import sys
+
+import feedgen.feed
+import flask
 import yaml
+
 
 DEBUG_MODE = os.environ.get('DEBUG', False)
 
@@ -37,6 +40,7 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
+
 def list_books():
     '''List all known books as (author, title) tuples.'''
 
@@ -55,10 +59,12 @@ def list_books():
 
             yield(author, title)
 
+
 def book_to_uuid(author, title):
     '''Translate a book folder into a deterministic UUID.'''
 
     return uuid.uuid5(UUID_NAMESPACE, author + title)
+
 
 def uuid_to_book(id, cache = {}):
     '''Translate a UUID from above back into a book folder.'''
@@ -76,28 +82,35 @@ def uuid_to_book(id, cache = {}):
 
     return cache[id]
 
+
 @app.route('/')
 @requires_auth
 def index():
-    result = '<ul>'
-    previous_author = None
+    #result = '<ul>'
+    #previous_author = None
 
+    library = collections.defaultdict(list)
     for author, title in list_books():
-        if author != previous_author:
-            if previous_author != None:
-                result += '</ul></li>'
+        book = (title, book_to_uuid(author, title))
+        library[author].append(book)
+    print(library)
+    #    if author != previous_author:
+    #        if previous_author != None:
+    #            result += '</ul></li>'
 
-            result += '<li>{author}<ul>'.format(author = author)
-            previous_author = author
+    #        result += '<li>{author}<ul>'.format(author = author)
+    #        previous_author = author
 
 
-        result += '<li><a href="feed/{uuid}.xml">{title}</a></li>'.format(
-            uuid = book_to_uuid(author, title),
-            title = title,
-        )
+    #    result += '<li><a href="feed/{uuid}.xml">{title}</a></li>'.format(
+    #        uuid = book_to_uuid(author, title),
+    #        title = title,
+    #    )
 
-    result += '</ul></li></ul>'
-    return result
+    #result += '</ul></li></ul>'
+    #return result
+    return flask.render_template('index.html', library=library)
+
 
 @app.route('/feed/<uuid>.xml')
 def get_feed(uuid):
@@ -137,7 +150,9 @@ def get_feed(uuid):
         ))
         fe.enclosure(feed_entry_link, 0, 'audio/mpeg')
 
-    return fg.rss_str(pretty = True)
+    return fg.rss_str(pretty=True)
+
 
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0', debug = DEBUG_MODE)
+    app.run(host = '0.0.0.0', debug=DEBUG_MODE)
+

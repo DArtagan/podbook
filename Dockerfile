@@ -2,8 +2,8 @@ FROM python:3-alpine
 
 ENV UUID_NAMESPACE=29bd3b17-cd2e-46eb-886a-4dbf0319c068
 
-RUN mkdir /app/
-WORKDIR /app/
+RUN mkdir /podbook/
+WORKDIR /podbook/
 
 # TODO:
 # Waiting for the update to Alpine 3.5 so that these packages may be directly installed, 
@@ -14,7 +14,7 @@ WORKDIR /app/
 #    py3-flask \
 #    py3-lxml
 
-ADD requirements.txt /app/
+ADD requirements.txt /podbook/
 
 RUN apk add --no-cache \
     libxslt \
@@ -28,7 +28,7 @@ RUN apk add --no-cache \
 
 ENV PYTHONUNBUFFERED True
 
-ADD . /app/
+ADD . /podbook/
 
-CMD python podbook.py
+CMD python podbook
 
