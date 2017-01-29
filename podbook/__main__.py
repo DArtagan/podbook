@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import collections
+import datetime
 import functools
 import os
 import uuid
@@ -130,7 +131,9 @@ def get_feed(uuid):
 
     fg.podcast.itunes_category('Arts')
 
-    for file in sorted(os.listdir(os.path.join('books', author, title))):
+    files = sorted(os.listdir(os.path.join('books', author, title)))
+    initial_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join('books', author, title, files[0])))
+    for index, file in enumerate(files):
         if not file.endswith(tuple(FORMATS)):
             continue
 
@@ -148,6 +151,7 @@ def get_feed(uuid):
             author = author,
             chapter = name,
         ))
+        fe.pubdate('{} +0000'.format(initial_time + datetime.timedelta(seconds=10 * index)))
         fe.enclosure(feed_entry_link, 0, 'audio/mpeg')
 
     return fg.rss_str(pretty=True)
