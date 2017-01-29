@@ -113,7 +113,9 @@ def get_feed(uuid):
 
     images = [os.path.basename(i) for i in glob.glob(os.path.join('books', author, title, 'cover*'))]
     if images:
-        fg.image(host_url + '/media/{author}/{title}/{image}'.format(author=author, title=title, image=images[0]))
+        url = host_url + '/media/{author}/{title}/{image}'.format(author=author, title=title, image=images[0])
+        fg.image(url)
+        fg.podcast.itunes_image(url)
 
     fg.podcast.itunes_category('Arts')
 
