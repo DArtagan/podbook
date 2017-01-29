@@ -151,7 +151,7 @@ def get_feed(uuid):
             author = author,
             chapter = name,
         ))
-        fe.pubdate('{} +0000'.format(initial_time + datetime.timedelta(seconds=10 * index)))
+        fe.pubdate('{} +0000'.format(initial_time + datetime.timedelta(seconds=90 * index)))
         fe.enclosure(feed_entry_link, 0, 'audio/mpeg')
 
     return fg.rss_str(pretty=True)
