@@ -3,6 +3,7 @@
 import collections
 import datetime
 import functools
+import glob
 import os
 import uuid
 import sys
@@ -87,29 +88,10 @@ def uuid_to_book(id, cache = {}):
 @app.route('/')
 @requires_auth
 def index():
-    #result = '<ul>'
-    #previous_author = None
-
     library = collections.defaultdict(list)
     for author, title in list_books():
         book = (title, book_to_uuid(author, title))
         library[author].append(book)
-    print(library)
-    #    if author != previous_author:
-    #        if previous_author != None:
-    #            result += '</ul></li>'
-
-    #        result += '<li>{author}<ul>'.format(author = author)
-    #        previous_author = author
-
-
-    #    result += '<li><a href="feed/{uuid}.xml">{title}</a></li>'.format(
-    #        uuid = book_to_uuid(author, title),
-    #        title = title,
-    #    )
-
-    #result += '</ul></li></ul>'
-    #return result
     return flask.render_template('index.html', library=library)
 
 
@@ -121,13 +103,17 @@ def get_feed(uuid):
     fg.load_extension('podcast')
 
     host_url = flask.request.scheme + '://' + flask.request.host
-    feed_link = host_url + '/feed/{uuid}.xml'.format(uuid = uuid)
+    feed_link = host_url + '/feed/{uuid}.xml'.format(uuid=uuid)
 
     fg.id = feed_link
     fg.title(title)
-    fg.description('{title} by {author}'.format(title = title, author = author))
-    fg.author(name = author)
-    fg.link(href = feed_link, rel = 'alternate')
+    fg.description('{title} by {author}'.format(title=title, author=author))
+    fg.author(name=author)
+    fg.link(href=feed_link, rel='alternate')
+
+    images = [os.path.basename(i) for i in glob.glob(os.path.join('books', author, title, 'cover*'))]
+    if images:
+        fg.image(host_url + '/media/{author}/{title}/{image}'.format(author=author, title=title, image=images[0]))
 
     fg.podcast.itunes_category('Arts')
 
@@ -139,7 +125,7 @@ def get_feed(uuid):
 
         name = file.rsplit('.', 1)[0]
 
-        feed_entry_link = host_url + '/media/{author}/{title}/{file}'.format(author = author, title = title, file = file)
+        feed_entry_link = host_url + '/media/{author}/{title}/{file}'.format(author=author, title=title, file=file)
         feed_entry_link = feed_entry_link.replace(' ', '%20')
 
         fe = fg.add_entry()
