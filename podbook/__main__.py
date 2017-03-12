@@ -30,7 +30,7 @@ app = flask.Flask(__name__)
 
 
 def requires_auth(f):
-    '''If we set a username and password, require it for this request.'''
+    """If we set a username and password, require it for this request."""
 
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -44,7 +44,7 @@ def requires_auth(f):
 
 
 def list_books():
-    '''List all known books as (author, title) tuples.'''
+    """List all known books as (author, title) tuples."""
 
     for author in os.listdir('books'):
         author_path = os.path.join('books', author)
@@ -63,13 +63,13 @@ def list_books():
 
 
 def book_to_uuid(author, title):
-    '''Translate a book folder into a deterministic UUID.'''
+    """Translate a book folder into a deterministic UUID."""
 
     return uuid.uuid5(UUID_NAMESPACE, author + title)
 
 
 def uuid_to_book(id, cache = {}):
-    '''Translate a UUID from above back into a book folder.'''
+    """Translate a UUID from above back into a book folder."""
 
     if not isinstance(id, uuid.UUID):
         id = uuid.UUID(id)
