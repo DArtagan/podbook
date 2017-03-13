@@ -4,7 +4,9 @@ import collections
 import datetime
 import functools
 import glob
+import mutagen.easyid3
 import os
+import re
 import uuid
 import sys
 
@@ -119,18 +121,32 @@ def get_feed(uuid):
 
     fg.podcast.itunes_category('Arts')
 
-    files = sorted(os.listdir(os.path.join('books', author, title)))
+    def get_tracknumber_from_file(filepath):
+        try:
+            track = mutagen.easyid3.EasyID3(filepath)['tracknumber'][0]
+            return int(re.match('\d+', track).group(0))
+        except mutagen.MutagenError:
+            return 0
+
+    files = glob.glob(os.path.join('books', author, title, '*'))
+    files = sorted(files, key=get_tracknumber_from_file)
+    files = [os.path.basename(i) for i in files]
     initial_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join('books', author, title, files[0])))
+
     for index, file in enumerate(files):
         if not file.endswith(tuple(FORMATS)):
             continue
-
-        name = file.rsplit('.', 1)[0]
 
         feed_entry_link = host_url + '/media/{author}/{title}/{file}'.format(author=author, title=title, file=file)
         feed_entry_link = feed_entry_link.replace(' ', '%20')
 
         fe = fg.add_entry()
+
+        try:
+            track = mutagen.easyid3.EasyID3(filepath)
+            name = ' '.join(track['title'])
+        except:
+            name = file.rsplit('.', 1)[0]
 
         fe.id(feed_entry_link)
         fe.title(name)
