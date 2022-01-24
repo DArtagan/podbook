@@ -21,6 +21,8 @@ UUID_NAMESPACE = uuid.UUID(os.environ.get('UUID_NAMESPACE', uuid.uuid4()))
 
 AUTH_USERNAME = os.environ.get('AUTH_USERNAME', False)
 AUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', False)
+URL_SCHEME = os.environ.get('URL_SCHEME')
+
 REQUIRE_AUTH = AUTH_USERNAME and AUTH_PASSWORD
 
 FORMATS = ['mp3', 'm4b']
@@ -104,7 +106,7 @@ def get_feed(uuid):
     fg = feedgen.feed.FeedGenerator()
     fg.load_extension('podcast')
 
-    host_url = flask.request.scheme + '://' + flask.request.host
+    host_url = (URL_SCHEME or flask.request.scheme) + '://' + flask.request.host
     feed_link = host_url + '/feed/{uuid}.xml'.format(uuid=uuid)
 
     fg.id = feed_link
