@@ -23,7 +23,10 @@ Sets the publish time of each episode as a sequentially increment from the modif
 
 ## Development
 
-* `rye`
+* `rye run devserver`
+* `rye run server`
+* `npm run dev`
+* `npm run build`
 * `docker build`
 
 
