@@ -1,18 +1,8 @@
-server:
-    build: server
-    env_file:
-        - ./podbook.env
-    ports:
-        - 5000
-    volumes:
-        - ./books:/app/books
-
-nginx:
-    image: nginx
-    links:
-        - server
-    ports:
-        - 80:80
-    volumes:
-        - ./books:/var/www/media/
-        - ./nginx:/etc/nginx/conf.d/
+services:
+    server:
+        build: .
+        environment:
+            BOOKS_DIRECTORY: ./book
+            UUID_NAMESPACE: b5885e90-4dec-4ebc-9bec-3022e98b106d
+        ports:
+            - 8000

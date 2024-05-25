@@ -1,57 +1,31 @@
-#!/usr/bin/env python3
-
 import collections
 import datetime
-import functools
 import glob
 import mutagen.easyid3
 import os
 import re
 import uuid
-import sys
 
 import feedgen.feed
 import flask
-import yaml
 
 
-DEBUG_MODE = os.environ.get('DEBUG', False)
+UUID_NAMESPACE = uuid.UUID(os.environ.get('UUID_NAMESPACE', str(uuid.uuid4())))
 
-UUID_NAMESPACE = uuid.UUID(os.environ.get('UUID_NAMESPACE', uuid.uuid4()))
+BOOKS_DIRECTORY = os.environ.get('BOOKS_DIRECTORY', 'books')
 
-AUTH_USERNAME = os.environ.get('AUTH_USERNAME', False)
-AUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', False)
 URL_SCHEME = os.environ.get('URL_SCHEME')
-
-REQUIRE_AUTH = AUTH_USERNAME and AUTH_PASSWORD
 
 FORMATS = ['mp3', 'm4b']
 
-if DEBUG_MODE: print('*** RUNNING IN DEBUG MODE ***')
-if not REQUIRE_AUTH: print('*** RUNNING WITHOUT AUTHENTICATION ***')
-
 app = flask.Flask(__name__)
-
-
-def requires_auth(f):
-    """If we set a username and password, require it for this request."""
-
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        if REQUIRE_AUTH:
-            auth = flask.request.authorization
-            if not auth or AUTH_USERNAME != auth.username or AUTH_PASSWORD != auth.password:
-                return flask.Response('Must authenticate', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
-
-        return f(*args, **kwargs)
-    return decorated
 
 
 def list_books():
     """List all known books as (author, title) tuples."""
 
-    for author in os.listdir('books'):
-        author_path = os.path.join('books', author)
+    for author in os.listdir(BOOKS_DIRECTORY):
+        author_path = os.path.join(BOOKS_DIRECTORY, author)
         if not os.path.isdir(author_path):
             continue
 
@@ -90,7 +64,6 @@ def uuid_to_book(id, cache = {}):
 
 
 @app.route('/')
-@requires_auth
 def index():
     library = collections.defaultdict(list)
     for author, title in list_books():
@@ -115,7 +88,7 @@ def get_feed(uuid):
     fg.author(name=author)
     fg.link(href=feed_link, rel='alternate')
 
-    images = [os.path.basename(i) for i in glob.glob(os.path.join('books', author, title, 'cover*'))]
+    images = [os.path.basename(i) for i in glob.glob(os.path.join(BOOKS_DIRECTORY, author, title, 'cover*'))]
     if images:
         url = host_url + '/media/{author}/{title}/{image}'.format(author=author, title=title, image=images[0])
         fg.image(url)
@@ -126,14 +99,14 @@ def get_feed(uuid):
     def get_tracknumber_from_file(filepath):
         try:
             track = mutagen.easyid3.EasyID3(filepath)['tracknumber'][0]
-            return int(re.match('\d+', track).group(0))
+            return int(re.match(r'\d+', track).group(0))
         except mutagen.MutagenError:
             return 0
 
-    files = glob.glob(os.path.join('books', author, title, '*'))
+    files = glob.glob(os.path.join(BOOKS_DIRECTORY, author, title, '*'))
     files = sorted(files, key=get_tracknumber_from_file)
     files = [os.path.basename(i) for i in files]
-    initial_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join('books', author, title, files[0])))
+    initial_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join(BOOKS_DIRECTORY, author, title, files[0])))
 
     for index, file in enumerate(files):
         if not file.endswith(tuple(FORMATS)):
@@ -161,8 +134,3 @@ def get_feed(uuid):
         fe.enclosure(feed_entry_link, 0, 'audio/mpeg')
 
     return fg.rss_str(pretty=True)
-
-
-if __name__ == '__main__':
-    app.run(host = '0.0.0.0', debug=DEBUG_MODE)
-

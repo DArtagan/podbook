@@ -1,21 +1,11 @@
 FROM python:3-alpine
 
-ENV UUID_NAMESPACE=29bd3b17-cd2e-46eb-886a-4dbf0319c068
+RUN mkdir /app/
+WORKDIR /app/
 
-RUN mkdir /podbook/
-WORKDIR /podbook/
+ADD requirements.lock pyproject.toml README.md .
 
-# TODO:
-# Waiting for the update to Alpine 3.5 so that these packages may be directly installed, 
-# rather than built with gcc. Remove build-dependencies steps.
-# When that day happens, perhaps we can use the nginx base image
-# and bake that into here too.
-#RUN apk add --no-cache \
-#    py3-flask \
-#    py3-lxml
-
-ADD requirements.txt /podbook/
-
+# TODO: try removing these extra dependencies/build-dependencies
 RUN apk add --no-cache \
     libxslt \
  && apk add --no-cache --virtual build-dependencies \
@@ -23,12 +13,11 @@ RUN apk add --no-cache \
     libxml2-dev \
     libxslt-dev \
     musl-dev \
- && pip3 install -r requirements.txt \
+ && pip3 install -r requirements.lock \
  && apk del build-dependencies
 
 ENV PYTHONUNBUFFERED True
 
-ADD . /podbook/
+ADD . .
 
-CMD python podbook
-
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "src.podbook_rebound.__main__:app"]

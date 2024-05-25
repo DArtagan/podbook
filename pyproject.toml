@@ -1,0 +1,31 @@
+[project]
+name = "podbook-rebound"
+version = "0.1.0"
+description = "Add your description here"
+dependencies = [
+    "feedgen>=1.0.0",
+    "flask>=3.0.3",
+    "mutagen>=1.47.0",
+    "pyyaml>=6.0.1",
+    "gunicorn>=22.0.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.rye.scripts]
+server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "src.podbook_rebound.__main__:app"] }
+devserver = { cmd = ["flask", "--app", "src.podbook_rebound.__main__:app", "run", "-p", "8000", "--debug"] }
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/podbook_rebound"]
