@@ -27,8 +27,6 @@ lxml==5.2.2
 markupsafe==2.1.5
     # via jinja2
     # via werkzeug
-mutagen==1.47.0
-    # via podbook-rebound
 packaging==24.0
     # via gunicorn
 python-dateutil==2.9.0.post0
@@ -37,5 +35,7 @@ pyyaml==6.0.1
     # via podbook-rebound
 six==1.16.0
     # via python-dateutil
+tinytag==1.10.1
+    # via podbook-rebound
 werkzeug==3.0.3
     # via flask

@@ -2,12 +2,11 @@ import collections
 import datetime
 import glob
 import os
-import re
 import uuid
 
 import feedgen.feed
 import flask
-import mutagen.easyid3
+import tinytag
 
 
 UUID_NAMESPACE = uuid.UUID(os.environ.get("UUID_NAMESPACE", str(uuid.uuid4())))
@@ -99,11 +98,8 @@ def get_feed(uuid):
 
     def get_tracknumber_from_file(filepath):
         try:
-            track = mutagen.easyid3.EasyID3(os.path.join(base_path, filepath))[
-                "tracknumber"
-            ][0]
-            return int(re.match(r"\d+", track).group(0))
-        except mutagen.MutagenError:
+            return int(tinytag.TinyTag.get(os.path.join(base_path, filepath)).track)
+        except tinytag.TinyTagException:
             return 0
 
     files = glob.glob(os.path.join(base_path, "*"))
@@ -125,9 +121,9 @@ def get_feed(uuid):
         fe = fg.add_entry()
 
         try:
-            track = mutagen.easyid3.EasyID3(os.path.join(base_path, file))
-            name = " ".join(track["title"])
-        except mutagen.id3._util.ID3NoHeaderError:
+            track = tinytag.TinyTag.get(os.path.join(base_path, file))
+            name = track.title
+        except tinytag.TinyTagException:
             name = file.rsplit(".", 1)[0]
 
         fe.id(feed_entry_link)

@@ -1,13 +1,13 @@
 [project]
 name = "podbook-rebound"
-version = "0.1.0"
+version = "0.1.2"
 description = "Add your description here"
 dependencies = [
     "feedgen>=1.0.0",
     "flask>=3.0.3",
-    "mutagen>=1.47.0",
     "pyyaml>=6.0.1",
     "gunicorn>=22.0.0",
+    "tinytag>=1.10.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

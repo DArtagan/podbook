@@ -35,8 +35,6 @@ lxml==5.2.2
 markupsafe==2.1.5
     # via jinja2
     # via werkzeug
-mutagen==1.47.0
-    # via podbook-rebound
 nodeenv==1.8.0
     # via pre-commit
 packaging==24.0
@@ -54,6 +52,8 @@ setuptools==70.0.0
     # via nodeenv
 six==1.16.0
     # via python-dateutil
+tinytag==1.10.1
+    # via podbook-rebound
 virtualenv==20.26.2
     # via pre-commit
 werkzeug==3.0.3
