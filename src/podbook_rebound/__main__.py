@@ -134,3 +134,10 @@ def get_feed(uuid):
         fe.enclosure(feed_entry_link, 0, 'audio/mpeg')
 
     return fg.rss_str(pretty=True)
+
+
+@app.route('/media/<path:path>')
+def get_file(path):
+    return flask.send_from_directory(
+        BOOKS_DIRECTORY, path.replace('%20', ' ')
+    )

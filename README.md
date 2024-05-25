@@ -30,9 +30,9 @@ Sets the publish time of each episode as a sequentially increment from the modif
 ## TODO
 
 * Clear use of the name podbook and its author, with its author - see license: https://github.com/jpverkamp/podbook/blob/master/LICENSE.md
-* Server the files directly, cease using nginx
-* Drop auth or make it much better.  I'd be fine using the reverse-proxy's auth instead (Traefik + basic auth)
+* Figure out what's to be done with the LICENSE, convert to MIT?
+* Server the files directly, cease using nginx.  Or maybe do keep using nginx... as gunicorn recommends.  More precisely, how to do either - depending on if we're running directly or via a container.  Probably have flask serve the files, but in the container provide a nginx configuration the supersedes it.  But we probably want the files to also be behind some form of auth/obfuscation... so maybe they're served by the application after all.
 * Do something to get rid of URL_SCHEME
-* UUID why?
+* UUID alternative (same determinism + salting, maybe a more portable approach)
 * Svelte front-end?  And typescript?
 * FastAPI back-end?  Or at least starlette?
