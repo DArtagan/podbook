@@ -10,14 +10,22 @@
 -e file:.
 blinker==1.8.2
     # via flask
+cfgv==3.4.0
+    # via pre-commit
 click==8.1.7
     # via flask
+distlib==0.3.8
+    # via virtualenv
 feedgen==1.0.0
     # via podbook-rebound
+filelock==3.14.0
+    # via virtualenv
 flask==3.0.3
     # via podbook-rebound
 gunicorn==22.0.0
     # via podbook-rebound
+identify==2.5.36
+    # via pre-commit
 itsdangerous==2.2.0
     # via flask
 jinja2==3.1.4
@@ -29,13 +37,24 @@ markupsafe==2.1.5
     # via werkzeug
 mutagen==1.47.0
     # via podbook-rebound
+nodeenv==1.8.0
+    # via pre-commit
 packaging==24.0
     # via gunicorn
+platformdirs==4.2.2
+    # via virtualenv
+pre-commit==3.7.1
 python-dateutil==2.9.0.post0
     # via feedgen
 pyyaml==6.0.1
     # via podbook-rebound
+    # via pre-commit
+ruff==0.4.5
+setuptools==70.0.0
+    # via nodeenv
 six==1.16.0
     # via python-dateutil
+virtualenv==20.26.2
+    # via pre-commit
 werkzeug==3.0.3
     # via flask

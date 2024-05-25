@@ -18,7 +18,10 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = []
+dev-dependencies = [
+    "ruff>=0.4.5",
+    "pre-commit>=3.7.1",
+]
 
 [tool.rye.scripts]
 server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "src.podbook_rebound.__main__:app"] }
