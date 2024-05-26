@@ -1,5 +1,15 @@
 <script>
-  let name = 'world';
+  import AuthorCard from '$lib/AuthorCard.svelte';
+  /** @type {import('./$types').PageData} */
+  export let data;
 </script>
 
-<h1>Hello {name}!</h1>
+<div class="container">
+  <div class="card-columns">
+    {#each data.library as { author, books }}
+      <AuthorCard {author} {books} />
+    {:else}
+      <p>No books found.</p>
+    {/each}
+  </div>
+</div>

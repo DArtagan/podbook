@@ -1,5 +1,6 @@
 import collections
 import datetime
+import functools
 import glob
 import os
 import uuid
@@ -56,13 +57,35 @@ def uuid_to_book(id, cache={}):
     return cache[id]
 
 
-@app.route("/")
-def index():
+@functools.cache
+def books_and_uuid_by_author():
     library = collections.defaultdict(list)
     for author, title in list_books():
         book = (title, book_to_uuid(author, title))
         library[author].append(book)
+    return library
+
+
+@app.route("/")
+def index():
+    library = books_and_uuid_by_author()
     return flask.render_template("index.html", library=library)
+
+
+@app.route("/api/books-by-author")
+def api_books_by_author():
+    library = books_and_uuid_by_author()
+    return flask.jsonify(
+        [
+            {
+                "author": author,
+                "books": [
+                    {"title": book[0], "uuid": book[1]} for book in library[author]
+                ],
+            }
+            for author in library
+        ]
+    )
 
 
 @app.route("/feed/<uuid>.xml")
@@ -135,7 +158,7 @@ def get_feed(uuid):
                 chapter=name,
             )
         )
-        fe.pubdate(
+        fe.pubDate(
             "{} +0000".format(initial_time + datetime.timedelta(seconds=90 * index))
         )
         fe.enclosure(feed_entry_link, 0, "audio/mpeg")
