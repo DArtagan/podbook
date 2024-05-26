@@ -24,8 +24,8 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "src.podbook_rebound.__main__:app"] }
-devserver = { cmd = ["flask", "--app", "src.back.__main__:app", "run", "-p", "8000", "--debug"] }
+server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "backend.src.__main__:app"] }
+devserver = { cmd = ["flask", "--app", "backend.src.back.__main__:app", "run", "-p", "8000", "--debug"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

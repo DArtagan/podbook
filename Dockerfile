@@ -20,4 +20,4 @@ ENV PYTHONUNBUFFERED True
 
 ADD . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "src.back.__main__:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.src.back.__main__:app"]
