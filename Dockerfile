@@ -1,9 +1,21 @@
-FROM python:3-alpine
+FROM node:alpine as client-builder
 
 RUN mkdir /app/
 WORKDIR /app/
 
-ADD requirements.lock pyproject.toml README.md .
+COPY frontend/package.json frontend/package-lock.json .
+RUN npm install
+COPY frontend .
+RUN npm run build
+
+
+FROM python:3-alpine
+
+ENV PYTHONUNBUFFERED True
+RUN mkdir /app/
+WORKDIR /app/
+
+COPY requirements.lock pyproject.toml README.md .
 
 # TODO: try removing these extra dependencies/build-dependencies
 RUN apk add --no-cache \
@@ -16,8 +28,7 @@ RUN apk add --no-cache \
  && pip3 install -r requirements.lock \
  && apk del build-dependencies
 
-ENV PYTHONUNBUFFERED True
+COPY --from=client-builder /app/dist /app/frontend/dist
+COPY . .
 
-ADD . .
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.src.back.__main__:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.src.__main__:app"]

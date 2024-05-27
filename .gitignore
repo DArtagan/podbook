@@ -10,7 +10,7 @@ __pycache__
 
 # Svelte
 node_modules
-frontend/build
+frontend/dist
 frontend/.svelte-kit
 frontend/package
 vite.config.js.timestamp-*

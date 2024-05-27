@@ -3,6 +3,7 @@ import datetime
 import functools
 import glob
 import os
+import pathlib
 import uuid
 
 import feedgen.feed
@@ -11,11 +12,11 @@ import tinytag
 
 
 UUID_NAMESPACE = uuid.UUID(os.environ.get("UUID_NAMESPACE", str(uuid.uuid4())))
-BOOKS_DIRECTORY = os.environ.get("BOOKS_DIRECTORY", "books")
-URL_SCHEME = os.environ.get("URL_SCHEME")
+BOOKS_DIRECTORY = os.environ.get("BOOKS_DIRECTORY", "/books")
 FORMATS = ["mp3", "m4b"]
+CLIENT_DIST_DIR = (pathlib.Path(__file__) / "../../../frontend/dist").resolve()
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, static_folder=CLIENT_DIST_DIR / "static")
 
 
 def list_books():
@@ -66,10 +67,10 @@ def books_and_uuid_by_author():
     return library
 
 
-@app.route("/")
-def index():
-    library = books_and_uuid_by_author()
-    return flask.render_template("index.html", library=library)
+@app.route("/", defaults={"path": "index.html"})
+@app.route("/<path:path>")
+def catch_all(path):
+    return flask.send_from_directory(CLIENT_DIST_DIR, path)
 
 
 @app.route("/api/books-by-author")
@@ -95,7 +96,7 @@ def get_feed(uuid):
     fg = feedgen.feed.FeedGenerator()
     fg.load_extension("podcast")
 
-    host_url = (URL_SCHEME or flask.request.scheme) + "://" + flask.request.host
+    host_url = (flask.request.scheme) + "://" + flask.request.host
     feed_link = host_url + "/feed/{uuid}.xml".format(uuid=uuid)
 
     fg.id = feed_link

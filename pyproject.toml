@@ -1,7 +1,7 @@
 [project]
 name = "podbook-rebound"
 version = "0.1.2"
-description = "Add your description here"
+description = "Serve up audiobooks as if they were podcasts."
 dependencies = [
     "feedgen>=1.0.0",
     "flask>=3.0.3",
@@ -15,6 +15,11 @@ requires-python = ">= 3.8"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pyright]
+exclude = [".venv"]
+venvPath = "."
+venv = ".venv"
 
 [tool.rye]
 managed = true
@@ -31,4 +36,4 @@ devserver = { cmd = ["flask", "--app", "backend.src.__main__:app", "run", "-p", 
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/podbook_rebound"]
+packages = ["backend/src"]

@@ -15,19 +15,31 @@ Sets the publish time of each episode as a sequentially increment from the modif
 
 ## Set-up
 
-1. Docker container or python
-2. Set environment variables:
-    * `UUID_NAMESPACE`: a random UUID of your choice.  This will be used generate deterministic hashes to put books behind in URLs.
+1. Set environment variables:
+    * `UUID_NAMESPACE`: a random UUID of your choice.  This will be used generate deterministic hashes to put books behind in URLs.  Can generate using `uuidgen -r`.
     * `BOOKS_DIRECTORY`: filepath to the directory containing all the audiobook folders.
 
+## Running
+
+```
+docker run --rm -it \
+  -p 8000:8000 \
+  -v /path/to/your/audiobooks:/books \
+  -e UUID_NAMESPACE=<a uuid> \
+  dartagan/podbook-rebound`
+```
 
 ## Development
 
-* `rye run devserver`
-* `rye run server`
-* `npm run dev`
-* `npm run build`
-* `docker build`
+### Simultaneous client/server development
+
+1. Start the backend devserver using: `rye run devserver`
+2. Start the frontend devserver using: `npm run dev`
+3. In the browser, go to: `http://localhost:5000`
+
+### Build docker container
+
+`docker build --pull . -t podbook-rebound`
 
 
 ## TODO
