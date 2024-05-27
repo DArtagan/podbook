@@ -29,11 +29,11 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "backend.src.__main__:app"] }
-devserver = { cmd = ["flask", "--app", "backend.src.__main__:app", "run", "-p", "8000", "--debug"] }
+server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "server.src.__main__:app"] }
+devserver = { cmd = ["flask", "--app", "server.src.__main__:app", "run", "-p", "8000", "--debug"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["backend/src"]
+packages = ["server/src"]

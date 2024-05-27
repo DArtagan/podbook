@@ -3,9 +3,9 @@ FROM node:alpine as client-builder
 RUN mkdir /app/
 WORKDIR /app/
 
-COPY frontend/package.json frontend/package-lock.json .
+COPY client/package.json client/package-lock.json .
 RUN npm install
-COPY frontend .
+COPY client .
 RUN npm run build
 
 
@@ -28,7 +28,7 @@ RUN apk add --no-cache \
  && pip3 install -r requirements.lock \
  && apk del build-dependencies
 
-COPY --from=client-builder /app/dist /app/frontend/dist
+COPY --from=client-builder /app/dist /app/client/dist
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.src.__main__:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "server.src.__main__:app"]

@@ -14,7 +14,7 @@ import tinytag
 UUID_NAMESPACE = uuid.UUID(os.environ.get("UUID_NAMESPACE", str(uuid.uuid4())))
 BOOKS_DIRECTORY = os.environ.get("BOOKS_DIRECTORY", "/books")
 FORMATS = ["mp3", "m4b"]
-CLIENT_DIST_DIR = (pathlib.Path(__file__) / "../../../frontend/dist").resolve()
+CLIENT_DIST_DIR = (pathlib.Path(__file__) / "../../../client/dist").resolve()
 
 app = flask.Flask(__name__, static_folder=CLIENT_DIST_DIR / "static")
 
