@@ -29,6 +29,6 @@ RUN apk add --no-cache \
  && apk del build-dependencies
 
 COPY --from=client-builder /app/dist /app/client/dist
-COPY . .
+COPY server ./server
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "server.src.__main__:app"]
+CMD ["uvicorn", "--host", "0.0.0.0", "--port", "8000", "server.src.__main__:app"] }

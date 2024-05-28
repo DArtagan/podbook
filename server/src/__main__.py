@@ -4,10 +4,12 @@ import functools
 import glob
 import os
 import pathlib
+from urllib import parse
 import uuid
 
 import feedgen.feed
-import flask
+import fastapi
+from fastapi import staticfiles
 import tinytag
 
 
@@ -16,7 +18,13 @@ BOOKS_DIRECTORY = os.environ.get("BOOKS_DIRECTORY", "/books")
 FORMATS = ["mp3", "m4b"]
 CLIENT_DIST_DIR = (pathlib.Path(__file__) / "../../../client/dist").resolve()
 
-app = flask.Flask(__name__, static_folder=CLIENT_DIST_DIR / "static")
+app = fastapi.FastAPI()
+api = fastapi.FastAPI(title="API: podbook_reloaded")
+
+app.mount("/api", api)
+app.mount(
+    "/media", name="media", app=staticfiles.StaticFiles(directory=BOOKS_DIRECTORY)
+)
 
 
 def list_books():
@@ -29,9 +37,6 @@ def list_books():
         for title in os.listdir(author_path):
             book_path = os.path.join(author_path, title)
             if not os.path.isdir(book_path):
-                continue
-
-            if not any(file.endswith(tuple(FORMATS)) for file in os.listdir(book_path)):
                 continue
 
             yield (author, title)
@@ -67,56 +72,42 @@ def books_and_uuid_by_author():
     return library
 
 
-@app.route("/", defaults={"path": "index.html"})
-@app.route("/<path:path>")
-def catch_all(path):
-    return flask.send_from_directory(CLIENT_DIST_DIR, path)
-
-
-@app.route("/api/books-by-author")
+@api.get("/books-by-author")
 def api_books_by_author():
     library = books_and_uuid_by_author()
-    return flask.jsonify(
-        [
-            {
-                "author": author,
-                "books": [
-                    {"title": book[0], "uuid": book[1]} for book in library[author]
-                ],
-            }
-            for author in library
-        ]
-    )
+    return [
+        {
+            "author": author,
+            "books": [{"title": book[0], "uuid": book[1]} for book in library[author]],
+        }
+        for author in library
+    ]
 
 
-@app.route("/feed/<uuid>.xml")
-def get_feed(uuid):
+@app.get("/feed/{uuid}.xml")
+def get_feed(uuid: uuid.UUID, request: fastapi.Request):
     author, title = uuid_to_book(uuid)
 
     fg = feedgen.feed.FeedGenerator()
     fg.load_extension("podcast")
 
-    host_url = (flask.request.scheme) + "://" + flask.request.host
-    feed_link = host_url + "/feed/{uuid}.xml".format(uuid=uuid)
+    feed_link = str(request.url_for("get_feed", uuid=uuid))
 
     fg.id = feed_link
     fg.title(title)
     fg.description("{title} by {author}".format(title=title, author=author))
     fg.author(name=author)
-    fg.link(href=feed_link, rel="alternate")
+    fg.link(href=feed_link, rel="self")
 
     images = [
         os.path.basename(i)
         for i in glob.glob(os.path.join(BOOKS_DIRECTORY, author, title, "cover*"))
     ]
     if images:
-        url = host_url + "/media/{author}/{title}/{image}".format(
-            author=author, title=title, image=images[0]
-        )
-        fg.image(url)
-        fg.podcast.itunes_image(url)
-
-    fg.podcast.itunes_category("Arts")
+        image_filepath = f"/{author}/{title}/{images[0]}"
+        image_url = str(request.url_for("media", path=parse.quote(image_filepath)))
+        fg.image(image_url)
+        fg.podcast.itunes_image(image_url)
 
     base_path = os.path.join(BOOKS_DIRECTORY, author, title)
 
@@ -137,10 +128,8 @@ def get_feed(uuid):
         if not file.endswith(tuple(FORMATS)):
             continue
 
-        feed_entry_link = host_url + "/media/{author}/{title}/{file}".format(
-            author=author, title=title, file=file
-        )
-        feed_entry_link = feed_entry_link.replace(" ", "%20")
+        filepath = f"/{author}/{title}/{file}"
+        feed_entry_link = str(request.url_for("media", path=parse.quote(filepath)))
 
         fe = fg.add_entry()
 
@@ -164,9 +153,10 @@ def get_feed(uuid):
         )
         fe.enclosure(feed_entry_link, 0, "audio/mpeg")
 
-    return fg.rss_str(pretty=True)
+    return fastapi.Response(
+        content=fg.rss_str(pretty=True), media_type="application/rss+xml"
+    )
 
 
-@app.route("/media/<path:path>")
-def get_file(path):
-    return flask.send_from_directory(BOOKS_DIRECTORY, path.replace("%20", " "))
+# Last, to redirect all remaining calls to the static files
+app.mount("/", staticfiles.StaticFiles(directory=CLIENT_DIST_DIR, html=True))

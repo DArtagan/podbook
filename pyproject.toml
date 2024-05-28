@@ -1,13 +1,13 @@
 [project]
 name = "podbook-rebound"
-version = "0.1.2"
+version = "0.2.0"
 description = "Serve up audiobooks as if they were podcasts."
 dependencies = [
     "feedgen>=1.0.0",
-    "flask>=3.0.3",
     "pyyaml>=6.0.1",
     "gunicorn>=22.0.0",
     "tinytag>=1.10.1",
+    "fastapi>=0.111.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -29,8 +29,8 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-server = { cmd = ["gunicorn", "--bind", "0.0.0.0:8000", "server.src.__main__:app"] }
-devserver = { cmd = ["flask", "--app", "server.src.__main__:app", "run", "-p", "8000", "--debug"] }
+server = { cmd = ["uvicorn", "--host", "0.0.0.0", "--port", "8000", "server.src.__main__:app"] }
+devserver = { cmd = ["fastapi", "dev", "server/src/__main__.py"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true
