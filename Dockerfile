@@ -18,12 +18,7 @@ WORKDIR /app/
 COPY requirements.lock pyproject.toml README.md .
 
 # TODO: try removing these extra dependencies/build-dependencies
-RUN apk add --no-cache \
-    libxslt \
- && apk add --no-cache --virtual build-dependencies \
-    gcc \
-    libxml2-dev \
-    libxslt-dev \
+RUN apk add --no-cache --virtual build-dependencies \
     musl-dev \
  && pip3 install -r requirements.lock \
  && apk del build-dependencies

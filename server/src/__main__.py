@@ -1,6 +1,5 @@
 import collections
 import datetime
-import functools
 import glob
 import os
 import pathlib
@@ -90,7 +89,7 @@ def uuid_to_book(id, cache={}):
     return cache[id]
 
 
-@functools.cache
+# @functools.cache
 def books_and_uuid_by_author():
     library = collections.defaultdict(list)
     for author, title in list_books():
