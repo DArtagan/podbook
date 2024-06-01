@@ -1,4 +1,5 @@
 <script>
+  import Title from './Title.svelte';
   export let author;
   export let books;
 </script>
@@ -7,7 +8,7 @@
   <p class="card-header">{author}</p>
   <ul class="list-group list-group-flush">
     {#each books as { title, uuid }}
-      <li class="list-group-item"><a class="clipboard" href="feed/{uuid}.xml">{title}</a></li>
+      <Title {title} {uuid} />
     {/each}
   </ul>
 </div>
