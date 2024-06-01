@@ -18,6 +18,8 @@ Sets the publish time of each episode as a sequentially increment from the modif
 1. Set environment variables:
     * `UUID_NAMESPACE`: a random UUID of your choice.  This will be used generate deterministic hashes to put books behind in URLs.  Can generate using `uuidgen -r`.
     * `BOOKS_DIRECTORY`: filepath to the directory containing all the audiobook folders.
+    * `BASIC_AUTH_USERNAME`: (optional) if you want basic auth, set to the username you want to use for basic auth.
+    * `BASIC_AUTH_PASSWORD`: (optional) if you want basic auth, set to the password you want to use for basic auth.
 
 ## Running
 
@@ -50,3 +52,4 @@ docker run --rm -it \
 * Is `request.url.host` a good way to get the URL for making the feeds?
 * async/await
 * UUID alternative (same determinism + salting, maybe a more portable approach).  Maybe just hash of the title, plus an optional salt, also need to do something to prevent collisions... though I guess the filesystem would handle that.
+* Bring back the masonry display for the authors/books

@@ -6,20 +6,47 @@ import os
 import pathlib
 from urllib import parse
 import uuid
+import secrets
 
 import feedgen.feed
 import fastapi
-from fastapi import staticfiles
+from fastapi import security, staticfiles
 import tinytag
 
-
-UUID_NAMESPACE = uuid.UUID(os.environ.get("UUID_NAMESPACE", str(uuid.uuid4())))
+BASIC_AUTH_USERNAME = os.environ.get("BASIC_AUTH_USERNAME")
+BASIC_AUTH_PASSWORD = os.environ.get("BASIC_AUTH_PASSWORD")
 BOOKS_DIRECTORY = os.environ.get("BOOKS_DIRECTORY", "/books")
-FORMATS = ["mp3", "m4b"]
 CLIENT_DIST_DIR = (pathlib.Path(__file__) / "../../../client/dist").resolve()
+FORMATS = ["mp3", "m4b"]
+UUID_NAMESPACE = uuid.UUID(os.environ.get("UUID_NAMESPACE", str(uuid.uuid4())))
+
+basic_auth = security.HTTPBasic()
+
+
+async def verify_basicauth(request: fastapi.Request):
+    if not BASIC_AUTH_USERNAME and not BASIC_AUTH_PASSWORD:
+        return
+    credentials = await basic_auth(request)
+    if credentials:
+        correct_username = secrets.compare_digest(
+            credentials.username, BASIC_AUTH_USERNAME
+        )  # type: ignore
+        correct_password = secrets.compare_digest(
+            credentials.password, BASIC_AUTH_PASSWORD
+        )  # type: ignore
+        if correct_username and correct_password:
+            return
+    raise fastapi.HTTPException(
+        status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
+        detail="Incorrect username or password.",
+        headers={"WWW-Authenticate": "Basic"},
+    )
+
 
 app = fastapi.FastAPI()
-api = fastapi.FastAPI(title="API: podbook_reloaded")
+api = fastapi.FastAPI(
+    title="API: podbook_reloaded", dependencies=[fastapi.Depends(verify_basicauth)]
+)
 
 app.mount("/api", api)
 app.mount(
@@ -85,7 +112,7 @@ def api_books_by_author():
 
 
 @app.get("/feed/{uuid}.xml")
-def get_feed(uuid: uuid.UUID, request: fastapi.Request):
+async def get_feed(uuid: uuid.UUID, request: fastapi.Request):
     author, title = uuid_to_book(uuid)
 
     fg = feedgen.feed.FeedGenerator()
@@ -158,5 +185,16 @@ def get_feed(uuid: uuid.UUID, request: fastapi.Request):
     )
 
 
+class AuthStaticFiles(staticfiles.StaticFiles):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    async def __call__(self, scope, receive, send) -> None:
+        assert scope["type"] == "http"
+        request = fastapi.Request(scope, receive)
+        await verify_basicauth(request)
+        await super().__call__(scope, receive, send)
+
+
 # Last, to redirect all remaining calls to the static files
-app.mount("/", staticfiles.StaticFiles(directory=CLIENT_DIST_DIR, html=True))
+app.mount("/", AuthStaticFiles(directory=CLIENT_DIST_DIR, html=True))
