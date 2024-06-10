@@ -20,6 +20,7 @@ FORMATS = ["mp3", "m4b"]
 UUID_NAMESPACE = uuid.UUID(os.environ.get("UUID_NAMESPACE", str(uuid.uuid4())))
 
 basic_auth = security.HTTPBasic()
+feed_cache: dict[uuid.UUID, str] = {}
 
 
 async def verify_basicauth(request: fastapi.Request):
@@ -112,76 +113,77 @@ def api_books_by_author():
 
 @app.get("/feed/{uuid}.xml")
 async def get_feed(uuid: uuid.UUID, request: fastapi.Request):
-    author, title = uuid_to_book(uuid)
+    if uuid not in feed_cache:
+        author, title = uuid_to_book(uuid)
 
-    fg = feedgen.feed.FeedGenerator()
-    fg.load_extension("podcast")
+        fg = feedgen.feed.FeedGenerator()
+        fg.load_extension("podcast")
 
-    feed_link = str(request.url_for("get_feed", uuid=uuid))
+        feed_link = str(request.url_for("get_feed", uuid=uuid))
 
-    fg.id = feed_link
-    fg.title(title)
-    fg.description("{title} by {author}".format(title=title, author=author))
-    fg.author(name=author)
-    fg.link(href=feed_link, rel="self")
+        fg.id = feed_link
+        fg.title(title)
+        fg.description("{title} by {author}".format(title=title, author=author))
+        fg.author(name=author)
+        fg.link(href=feed_link, rel="self")
 
-    images = [
-        os.path.basename(i)
-        for i in glob.glob(os.path.join(BOOKS_DIRECTORY, author, title, "cover*"))
-    ]
-    if images:
-        image_filepath = f"/{author}/{title}/{images[0]}"
-        image_url = str(request.url_for("media", path=parse.quote(image_filepath)))
-        fg.image(image_url)
-        fg.podcast.itunes_image(image_url)
+        images = [
+            os.path.basename(i)
+            for i in glob.glob(os.path.join(BOOKS_DIRECTORY, author, title, "cover*"))
+        ]
+        if images:
+            image_filepath = f"/{author}/{title}/{images[0]}"
+            image_url = str(request.url_for("media", path=parse.quote(image_filepath)))
+            fg.image(image_url)
+            fg.podcast.itunes_image(image_url)
 
-    base_path = os.path.join(BOOKS_DIRECTORY, author, title)
+        base_path = os.path.join(BOOKS_DIRECTORY, author, title)
 
-    def get_tracknumber_from_file(filepath):
-        try:
-            return int(tinytag.TinyTag.get(os.path.join(base_path, filepath)).track)
-        except tinytag.TinyTagException:
-            return 0
+        def get_tracknumber_from_file(filepath):
+            try:
+                return int(tinytag.TinyTag.get(os.path.join(base_path, filepath)).track)
+            except tinytag.TinyTagException:
+                return 0
 
-    files = glob.glob(os.path.join(base_path, "*"))
-    files = sorted(files, key=get_tracknumber_from_file)
-    files = [os.path.basename(i) for i in files]
-    initial_time = datetime.datetime.utcfromtimestamp(
-        os.path.getmtime(os.path.join(BOOKS_DIRECTORY, author, title, files[0]))
-    )
+        files = glob.glob(os.path.join(base_path, "*"))
+        files = sorted(files, key=get_tracknumber_from_file)
+        files = [os.path.basename(i) for i in files]
+        initial_time = datetime.datetime.utcfromtimestamp(
+            os.path.getmtime(os.path.join(BOOKS_DIRECTORY, author, title, files[0]))
+        )
 
-    for index, file in enumerate(files):
-        if not file.endswith(tuple(FORMATS)):
-            continue
+        for index, file in enumerate(files):
+            if not file.endswith(tuple(FORMATS)):
+                continue
 
-        filepath = f"/{author}/{title}/{file}"
-        feed_entry_link = str(request.url_for("media", path=parse.quote(filepath)))
+            filepath = f"/{author}/{title}/{file}"
+            feed_entry_link = str(request.url_for("media", path=parse.quote(filepath)))
 
-        fe = fg.add_entry()
+            fe = fg.add_entry()
 
-        try:
-            track = tinytag.TinyTag.get(os.path.join(base_path, file))
-            name = track.title
-        except tinytag.TinyTagException:
-            name = file.rsplit(".", 1)[0]
+            try:
+                track = tinytag.TinyTag.get(os.path.join(base_path, file))
+                name = track.title
+            except tinytag.TinyTagException:
+                name = file.rsplit(".", 1)[0]
 
-        fe.id(feed_entry_link)
-        fe.title(name)
-        fe.description(
-            "{title} by {author} - {chapter}".format(
-                title=title,
-                author=author,
-                chapter=name,
+            fe.id(feed_entry_link)
+            fe.title(name)
+            fe.description(
+                "{title} by {author} - {chapter}".format(
+                    title=title,
+                    author=author,
+                    chapter=name,
+                )
             )
-        )
-        fe.pubDate(
-            "{} +0000".format(initial_time + datetime.timedelta(seconds=90 * index))
-        )
-        fe.enclosure(feed_entry_link, 0, "audio/mpeg")
+            fe.pubDate(
+                "{} +0000".format(initial_time + datetime.timedelta(seconds=90 * index))
+            )
+            fe.enclosure(feed_entry_link, 0, "audio/mpeg")
 
-    return fastapi.Response(
-        content=fg.rss_str(pretty=True), media_type="application/rss+xml"
-    )
+            feed_cache[uuid] = fg.rss_str(pretty=True)
+
+    return fastapi.Response(content=feed_cache[uuid], media_type="application/rss+xml")
 
 
 class AuthStaticFiles(staticfiles.StaticFiles):

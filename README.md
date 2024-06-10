@@ -54,3 +54,4 @@ docker run --rm -it \
 * async/await
 * UUID alternative (same determinism + salting, maybe a more portable approach).  Maybe just hash of the title, plus an optional salt, also need to do something to prevent collisions... though I guess the filesystem would handle that.
 * Bring back the masonry display for the authors/books
+* Merkle tree for feed/cache invalidation
